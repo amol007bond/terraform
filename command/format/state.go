@@ -8,11 +8,8 @@ import (
 
 	"github.com/hashicorp/terraform/addrs"
 	"github.com/hashicorp/terraform/plans"
-
-	"github.com/mitchellh/colorstring"
-
 	"github.com/hashicorp/terraform/states"
-	// "github.com/hashicorp/terraform/terraform"
+	"github.com/mitchellh/colorstring"
 )
 
 // StateOpts are the options for formatting a state.
@@ -45,7 +42,7 @@ func State(opts *StateOpts) string {
 
 	// Format all the modules
 	for _, m := range s.Modules {
-		formatStateModule(&buf, m, opts)
+		formatStateModule(p, m, opts)
 	}
 
 	// Write the outputs for the root module
@@ -53,7 +50,7 @@ func State(opts *StateOpts) string {
 
 	if m.OutputValues != nil {
 		if len(m.OutputValues) > 0 {
-			buf.WriteString("\nOutputs:\n\n")
+			p.buf.WriteString("\nOutputs:\n\n")
 		}
 
 		// Sort the outputs
@@ -66,17 +63,17 @@ func State(opts *StateOpts) string {
 		// Output each output k/v pair
 		for _, k := range ks {
 			v := m.OutputValues[k]
-			buf.WriteString(fmt.Sprintf("%s = ", k))
+			p.buf.WriteString(fmt.Sprintf("%s = ", k))
 			p.writeValue(v.Value, plans.NoOp, 0)
 		}
 	}
 
-	return opts.Color.Color(strings.TrimSpace(buf.String()))
+	return opts.Color.Color(strings.TrimSpace(p.buf.String()))
 
 }
 
 func formatStateModule(
-	buf *bytes.Buffer, m *states.Module, opts *StateOpts) {
+	p blockBodyDiffPrinter, m *states.Module, opts *StateOpts) {
 
 	var moduleName string
 	if !m.Addr.IsRoot() {
@@ -101,66 +98,36 @@ func formatStateModule(
 		addr := m.Resources[k].Addr
 		switch addr.Mode {
 		case addrs.ManagedResourceMode:
-			buf.WriteString(fmt.Sprintf(
-				"resource %q %q",
+			p.buf.WriteString(fmt.Sprintf(
+				"resource %q %q {\n",
 				addr.Type,
 				addr.Name,
 			))
 		case addrs.DataResourceMode:
-			buf.WriteString(fmt.Sprintf(
-				"data %q %q ",
+			p.buf.WriteString(fmt.Sprintf(
+				"data %q %q {\n",
 				addr.Type,
 				addr.Name,
 			))
 		default:
 			// should never happen, since the above is exhaustive
-			buf.WriteString(addr.String())
+			p.buf.WriteString(addr.String())
 		}
 
-		buf.WriteString(" { attrs go here! }\n")
+		taintStr := ""
+		instances := m.Resources[k].Instances
+		for _, v := range instances {
+			if v.Current.Status == 'T' {
+				taintStr = " (tainted)"
+			}
+			p.buf.WriteString(fmt.Sprintf("\n  %s: %s", addr.String(), taintStr))
+		}
 
+		p.buf.WriteString(" { TODO: attrs go here! }\n")
 	}
 
-	// 	rs := m.Resources[k]
-	// 	is := rs.Instance
-	// 	var id string
-	// 	if is != nil {
-	// 		id = is
-	// 	}
-	// 	if id == "" {
-	// 		id = "<not created>"
-	// 	}
-
-	// 	taintStr := ""
-	// 	// if rs.Primary != nil && rs.Primary.Tainted {
-	// 	// 	taintStr = " (tainted)"
-	// 	// }
-
-	// 	buf.WriteString(fmt.Sprintf("%s:%s\n", name, taintStr))
-	// 	buf.WriteString(fmt.Sprintf("  id = %s\n", id))
-
-	// 	if is != nil {
-	// 		// Sort the attributes
-	// 		attrKeys := make([]string, 0, len(is.Attributes))
-	// 		for ak, _ := range is.Attributes {
-	// 			// Skip the id attribute since we just show the id directly
-	// 			if ak == "id" {
-	// 				continue
-	// 			}
-
-	// 			attrKeys = append(attrKeys, ak)
-	// 		}
-	// 		sort.Strings(attrKeys)
-
-	// 		// Output each attribute
-	// 		for _, ak := range attrKeys {
-	// 			av := is.Attributes[ak]
-	// 			buf.WriteString(fmt.Sprintf("  %s = %s\n", ak, av))
-	// 		}
-	// 	}
-	// }
-
-	buf.WriteString("[reset]\n")
+	p.buf.WriteString("}\n")
+	p.buf.WriteString("[reset]\n")
 }
 
 func formatNestedList(indent string, outputList []interface{}) string {
