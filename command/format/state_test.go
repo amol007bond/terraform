@@ -1,7 +1,6 @@
 package format
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform/addrs"
@@ -57,7 +56,7 @@ func TestState(t *testing.T) {
 				State: state,
 				Color: disabledColorize,
 			},
-			"module.test_module.test_resource.foo",
+			"test_thing.baz",
 		},
 	}
 
@@ -70,13 +69,4 @@ func TestState(t *testing.T) {
 			)
 		}
 	}
-}
-
-func mustParseModuleInstanceStr(s string) addrs.ModuleInstance {
-	addr, err := addrs.ParseModuleInstanceStr(s)
-	if err != nil {
-		fmt.Printf(err.Err().Error())
-		panic(err)
-	}
-	return addr
 }
