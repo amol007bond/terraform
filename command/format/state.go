@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform/addrs"
 	"github.com/hashicorp/terraform/plans"
 	"github.com/hashicorp/terraform/states"
-	"github.com/hashicorp/terraform/terraform"
 	"github.com/mitchellh/colorstring"
 )
 
@@ -19,7 +18,7 @@ type StateOpts struct {
 	State *states.State
 
 	// Schemas are necessary to format resource attributes. This is required.
-	Schemas *terraform.Schemas
+	// Schemas *terraform.Schemas
 
 	// Color is the colorizer. This is optional.
 	Color *colorstring.Colorize
@@ -31,9 +30,9 @@ func State(opts *StateOpts) string {
 		panic("colorize not given")
 	}
 
-	if opts.Schemas == nil {
-		panic("schemas not given")
-	}
+	// if opts.Schemas == nil {
+	// 	panic("schemas not given")
+	// }
 
 	s := opts.State
 	if len(s.Modules) == 0 {
@@ -128,7 +127,7 @@ func formatStateModule(
 			if v.Current.Status == 'T' {
 				taintStr = " (tainted)"
 			}
-			p.buf.WriteString(fmt.Sprintf("\n  %s: %s", addr.String(), taintStr))
+			p.buf.WriteString(fmt.Sprintf("  %s: %s", addr.String(), taintStr))
 
 			// something something decode v.Current.AttrsJSON)
 
@@ -136,8 +135,8 @@ func formatStateModule(
 
 		// ok, what do
 		//
-		stuff := opts.Schemas.ResourceTypeConfig(m.Resources[k].ProviderConfig.String(), addr.Type)
-		fmt.Printf("%#v\n", stuff)
+		// stuff := opts.Schemas.ResourceTypeConfig(m.Resources[k].ProviderConfig.String(), addr.Type)
+		// fmt.Printf("%#v\n", stuff)
 		// val, err := plans.NewDynamicValue()
 		p.buf.WriteString(" { TODO: attrs go here! }\n")
 	}
