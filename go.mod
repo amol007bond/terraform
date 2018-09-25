@@ -72,7 +72,7 @@ require (
 	github.com/hashicorp/go-version v0.0.0-20180322230233-23480c066577
 	github.com/hashicorp/golang-lru v0.0.0-20180201235237-0fb14efe8c47 // indirect
 	github.com/hashicorp/hcl v0.0.0-20170504190234-a4b07c25de5f
-	github.com/hashicorp/hcl2 v0.0.0-20180822193130-ed8144cda141
+	github.com/hashicorp/hcl2 v0.0.0-20180925145057-031669f9ff2a
 	github.com/hashicorp/hil v0.0.0-20170627220502-fa9f258a9250
 	github.com/hashicorp/logutils v0.0.0-20150609070431-0dc08b1671f3
 	github.com/hashicorp/memberlist v0.1.0 // indirect
@@ -87,6 +87,7 @@ require (
 	github.com/jtolds/gls v4.2.1+incompatible // indirect
 	github.com/kardianos/osext v0.0.0-20160811001526-c2c54e542fb7
 	github.com/keybase/go-crypto v0.0.0-20161004153544-93f5b35093ba // indirect
+	github.com/kr/pretty v0.1.0
 	github.com/kr/pty v1.1.2 // indirect
 	github.com/lusis/go-artifactory v0.0.0-20160115162124-7e4ce345df82
 	github.com/masterzen/azure-sdk-for-go v0.0.0-20161014135628-ee4f0065d00c // indirect

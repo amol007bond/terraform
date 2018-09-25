@@ -132,7 +132,7 @@ type RelativeTraversalExpr struct {
 }
 
 func (e *RelativeTraversalExpr) walkChildNodes(w internalWalkFunc) {
-	// Scope traversals have no child nodes
+	w(e.Source)
 }
 
 func (e *RelativeTraversalExpr) Value(ctx *hcl.EvalContext) (cty.Value, hcl.Diagnostics) {
