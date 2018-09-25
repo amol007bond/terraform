@@ -19,7 +19,7 @@ type StateOpts struct {
 	// State is the state to format. This is required.
 	State *states.State
 
-	// Schemas are necessary to format resource attributes. This is required.
+	// Schemas are used to decode attributes. This is required.
 	Schemas *terraform.Schemas
 
 	// Color is the colorizer. This is optional.
@@ -51,7 +51,7 @@ func State(opts *StateOpts) string {
 
 	// Format all the modules
 	for _, m := range s.Modules {
-		formatStateModule(p, m, opts)
+		formatStateModule(p, m, opts.Schemas)
 	}
 
 	// Write the outputs for the root module
@@ -82,7 +82,7 @@ func State(opts *StateOpts) string {
 }
 
 func formatStateModule(
-	p blockBodyDiffPrinter, m *states.Module, opts *StateOpts) {
+	p blockBodyDiffPrinter, m *states.Module, schemas *terraform.Schemas) {
 
 	var moduleName string
 	if !m.Addr.IsRoot() {
@@ -124,14 +124,14 @@ func formatStateModule(
 					addr.Type,
 					addr.Name,
 				))
-				schema = opts.Schemas.Providers[provider].ResourceTypes[addr.Type]
+				schema = schemas.Providers[provider].ResourceTypes[addr.Type]
 			case addrs.DataResourceMode:
 				p.buf.WriteString(fmt.Sprintf(
 					"data %q %q {\n",
 					addr.Type,
 					addr.Name,
 				))
-				schema = opts.Schemas.Providers[provider].DataSources[addr.Type]
+				schema = schemas.Providers[provider].DataSources[addr.Type]
 			default:
 				// should never happen, since the above is exhaustive
 				p.buf.WriteString(addr.String())
