@@ -91,15 +91,15 @@ func testProviderSchema() *terraform.ProviderSchema {
 	return &terraform.ProviderSchema{
 		Provider: &configschema.Block{
 			Attributes: map[string]*configschema.Attribute{
-				"region":  {Type: cty.String, Optional: true},
-				"woozles": {Type: cty.String, Optional: true},
+				"region": {Type: cty.String, Optional: true},
 			},
 		},
 		ResourceTypes: map[string]*configschema.Block{
 			"test_resource": {
 				Attributes: map[string]*configschema.Attribute{
-					"id":  {Type: cty.String, Computed: true},
-					"foo": {Type: cty.String, Optional: true},
+					"id":      {Type: cty.String, Computed: true},
+					"foo":     {Type: cty.String, Optional: true},
+					"woozles": {Type: cty.String, Optional: true},
 				},
 			},
 		},

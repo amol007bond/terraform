@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform/addrs"
+	"github.com/hashicorp/terraform/configs/configschema"
 	"github.com/hashicorp/terraform/plans"
 	"github.com/hashicorp/terraform/states"
 	"github.com/hashicorp/terraform/terraform"
@@ -97,58 +98,63 @@ func formatStateModule(
 	sort.Strings(names)
 
 	// Go through each resource and begin building up the output.
-	for _, k := range names {
-		name := k
-		if moduleName != "" {
-			name = moduleName + "." + name
-		}
-
-		addr := m.Resources[k].Addr
-		switch addr.Mode {
-		case addrs.ManagedResourceMode:
-			p.buf.WriteString(fmt.Sprintf(
-				"resource %q %q {\n",
-				addr.Type,
-				addr.Name,
-			))
-		case addrs.DataResourceMode:
-			p.buf.WriteString(fmt.Sprintf(
-				"data %q %q {\n",
-				addr.Type,
-				addr.Name,
-			))
-		default:
-			// should never happen, since the above is exhaustive
-			p.buf.WriteString(addr.String())
-		}
-
+	for _, key := range names {
 		taintStr := ""
-		instances := m.Resources[k].Instances
-		for _, v := range instances {
-			if v.Current.Status == 'T' {
-				taintStr = " (tainted)"
+		instances := m.Resources[key].Instances
+		for k, v := range instances {
+			name := key
+			if moduleName != "" {
+				name = moduleName + "." + name
 			}
-			p.buf.WriteString(fmt.Sprintf("  %s: %s", addr.String(), taintStr))
 
-			provider := m.Resources[k].ProviderConfig.ProviderConfig.StringCompact()
-			schema := opts.Schemas.Providers[provider].Provider
+			addr := m.Resources[key].Addr
+			if v.Current.Status == 'T' {
+				taintStr = "(tainted)"
+			}
+			p.buf.WriteString(fmt.Sprintf("# %s: %s\n", addr.Instance(k), taintStr))
+			taintStr = ""
+
+			var schema *configschema.Block
+			provider := m.Resources[key].ProviderConfig.ProviderConfig.StringCompact()
+
+			switch addr.Mode {
+			case addrs.ManagedResourceMode:
+				p.buf.WriteString(fmt.Sprintf(
+					"resource %q %q {\n",
+					addr.Type,
+					addr.Name,
+				))
+				schema = opts.Schemas.Providers[provider].ResourceTypes[addr.Type]
+			case addrs.DataResourceMode:
+				p.buf.WriteString(fmt.Sprintf(
+					"data %q %q {\n",
+					addr.Type,
+					addr.Name,
+				))
+				schema = opts.Schemas.Providers[provider].DataSources[addr.Type]
+			default:
+				// should never happen, since the above is exhaustive
+				p.buf.WriteString(addr.String())
+			}
+
 			val, err := v.Current.Decode(schema.ImpliedType())
 
 			if err != nil {
-				panic(err)
+				fmt.Println(err.Error())
+				break
 			}
-			p.buf.WriteString(" { \n")
 			for name := range schema.Attributes {
-				p.buf.WriteString(fmt.Sprintf("    %s = ", name))
 				attr := ctyGetAttrMaybeNull(val.Value, name)
-				p.writeValue(attr, plans.NoOp, 4)
-				p.buf.WriteString("\n")
+				if !attr.IsNull() {
+					p.buf.WriteString(fmt.Sprintf("    %s = ", name))
+					attr := ctyGetAttrMaybeNull(val.Value, name)
+					p.writeValue(attr, plans.NoOp, 4)
+					p.buf.WriteString("\n")
+				}
 			}
-			p.buf.WriteString(" }\n")
+			p.buf.WriteString("}\n\n")
 		}
 	}
-
-	p.buf.WriteString("}\n")
 	p.buf.WriteString("[reset]\n")
 }
 
