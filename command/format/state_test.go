@@ -49,16 +49,17 @@ func TestState(t *testing.T) {
 	}{
 		{
 			&StateOpts{
-				State: &states.State{},
-				Color: disabledColorize,
-				// Schemas: &terraform.Schemas{},
+				State:   &states.State{},
+				Color:   disabledColorize,
+				Schemas: &terraform.Schemas{},
 			},
 			"The state file is empty. No resources are represented.",
 		},
 		{
 			&StateOpts{
-				State: state,
-				Color: disabledColorize,
+				State:   state,
+				Color:   disabledColorize,
+				Schemas: testSchemas(),
 			},
 			"test_resource.baz",
 		},
@@ -90,17 +91,15 @@ func testProviderSchema() *terraform.ProviderSchema {
 	return &terraform.ProviderSchema{
 		Provider: &configschema.Block{
 			Attributes: map[string]*configschema.Attribute{
-				"region": {
-					Type:     cty.String,
-					Optional: true,
-				},
+				"region":  {Type: cty.String, Optional: true},
+				"woozles": {Type: cty.String, Optional: true},
 			},
 		},
 		ResourceTypes: map[string]*configschema.Block{
 			"test_resource": {
 				Attributes: map[string]*configschema.Attribute{
-					"id":      {Type: cty.String, Computed: true},
-					"woozles": {Type: cty.String, Optional: true},
+					"id":  {Type: cty.String, Computed: true},
+					"foo": {Type: cty.String, Optional: true},
 				},
 			},
 		},
@@ -118,7 +117,7 @@ func testProviderSchema() *terraform.ProviderSchema {
 func testSchemas() *terraform.Schemas {
 	provider := testProvider()
 	return &terraform.Schemas{
-		providers: map[string]*ProviderSchema{
+		Providers: map[string]*terraform.ProviderSchema{
 			"test": provider.GetSchemaReturn,
 		},
 	}
